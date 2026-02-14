@@ -36,10 +36,10 @@ const Header = () => {
               className="h-9 w-auto transition-transform duration-300 group-hover:scale-105"
             />
             <span 
-              className="text-white font-semibold tracking-widest hidden sm:block transition-transform duration-300 group-hover:scale-105"
+              className="text-white font-semibold tracking-widest transition-transform duration-300 group-hover:scale-105"
               style={{ 
-                fontSize: '14px',
-                letterSpacing: '0.2em',
+                fontSize: '12px',
+                letterSpacing: '0.15em',
                 fontFamily: "'Inter', 'Segoe UI', sans-serif"
               }}
             >
