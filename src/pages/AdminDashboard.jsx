@@ -4,7 +4,7 @@ import {
   LogOut, Mail, Trash2, Check, RefreshCw, 
   MessageSquare, Clock, Building, Phone,
   ChevronDown, ChevronUp, Plus, Edit, BookOpen,
-  Star, Save, X, FileText
+  Star, Save, X, FileText, Upload, Image
 } from 'lucide-react';
 import { companyInfo } from '../data/mockData';
 import axios from 'axios';
@@ -21,6 +21,7 @@ const AdminDashboard = () => {
   const [expandedId, setExpandedId] = useState(null);
   const [showArticleForm, setShowArticleForm] = useState(false);
   const [editingArticle, setEditingArticle] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [articleForm, setArticleForm] = useState({
     title: '',
     body: '',
@@ -152,6 +153,35 @@ const AdminDashboard = () => {
       publishDate: new Date().toISOString().split('T')[0],
       published: true
     });
+  };
+
+  // Image upload handler
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+    
+    setUploadingImage(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const response = await axios.post(`${BACKEND_URL}/api/admin/upload`, formData, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      if (response.data.success) {
+        // Set the full URL for the uploaded image
+        const imageUrl = `${BACKEND_URL}${response.data.url}`;
+        setArticleForm(prev => ({ ...prev, image: imageUrl }));
+      }
+    } catch (err) {
+      console.error('Failed to upload image:', err);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   // Featured Insights functions
@@ -311,6 +341,8 @@ const AdminDashboard = () => {
             editArticle={editArticle}
             deleteArticle={deleteArticle}
             resetArticleForm={resetArticleForm}
+            handleImageUpload={handleImageUpload}
+            uploadingImage={uploadingImage}
           />
         )}
 
@@ -439,7 +471,7 @@ const ContactsTab = ({ contacts, loading, expandedId, setExpandedId, markAsRead,
 const ArticlesTab = ({ 
   articles, loading, showArticleForm, setShowArticleForm, 
   articleForm, setArticleForm, editingArticle, handleArticleSubmit, 
-  editArticle, deleteArticle, resetArticleForm 
+  editArticle, deleteArticle, resetArticleForm, handleImageUpload, uploadingImage 
 }) => (
   <div className="space-y-6">
     {/* Add Article Button */}
@@ -521,14 +553,54 @@ const ArticlesTab = ({
           </div>
 
           <div>
-            <label className="block text-gray-300 text-sm font-medium mb-2">Image URL (optional)</label>
-            <input
-              type="url"
-              value={articleForm.image}
-              onChange={(e) => setArticleForm({...articleForm, image: e.target.value})}
-              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-gold-400"
-              placeholder="https://example.com/image.jpg"
-            />
+            <label className="block text-gray-300 text-sm font-medium mb-2">Article Image</label>
+            <div className="space-y-3">
+              {/* Image Preview */}
+              {articleForm.image && (
+                <div className="relative w-full h-48 bg-gray-800 rounded-lg overflow-hidden">
+                  <img 
+                    src={articleForm.image} 
+                    alt="Article preview" 
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setArticleForm({...articleForm, image: ''})}
+                    className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              
+              {/* Upload Button */}
+              <div className="flex items-center space-x-4">
+                <label className="flex items-center space-x-2 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-300 hover:border-gold-400 cursor-pointer transition-colors">
+                  <Upload className="w-5 h-5" />
+                  <span>{uploadingImage ? 'Uploading...' : 'Upload Image'}</span>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={(e) => handleImageUpload(e.target.files[0])}
+                    className="hidden"
+                    disabled={uploadingImage}
+                  />
+                </label>
+                <span className="text-gray-500 text-sm">PNG, JPEG, or WebP</span>
+              </div>
+              
+              {/* Or use URL */}
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-500 text-sm">Or enter URL:</span>
+                <input
+                  type="url"
+                  value={articleForm.image}
+                  onChange={(e) => setArticleForm({...articleForm, image: e.target.value})}
+                  className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-gold-400"
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+            </div>
           </div>
 
           <div>

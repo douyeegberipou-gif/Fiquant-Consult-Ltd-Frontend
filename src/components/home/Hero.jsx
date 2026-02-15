@@ -42,10 +42,10 @@ const Hero = () => {
     }, 300);
   };
 
-  // Auto-advance carousel
+  // Auto-advance carousel every 7 seconds
   useEffect(() => {
     if (articles.length <= 1) return;
-    const interval = setInterval(nextSlide, 5000);
+    const interval = setInterval(nextSlide, 7000);
     return () => clearInterval(interval);
   }, [articles.length, nextSlide]);
 
