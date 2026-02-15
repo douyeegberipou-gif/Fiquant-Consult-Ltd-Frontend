@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { companyInfo } from '../data/mockData';
@@ -13,15 +13,7 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Check if already logged in
-  useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    if (token) {
-      validateToken(token);
-    }
-  }, []);
-
-  const validateToken = async (token) => {
+  const validateToken = useCallback(async (token) => {
     try {
       await axios.get(`${BACKEND_URL}/api/admin/validate`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -30,7 +22,15 @@ const AdminLogin = () => {
     } catch (err) {
       localStorage.removeItem('adminToken');
     }
-  };
+  }, [navigate]);
+
+  // Check if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    if (token) {
+      validateToken(token);
+    }
+  }, [validateToken]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

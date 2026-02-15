@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  LogOut, Mail, Trash2, Check, Eye, RefreshCw, 
-  MessageSquare, Clock, User, Building, Phone,
+  LogOut, Mail, Trash2, Check, RefreshCw, 
+  MessageSquare, Clock, Building, Phone,
   ChevronDown, ChevronUp
 } from 'lucide-react';
 import { companyInfo } from '../data/mockData';
@@ -17,31 +17,11 @@ const AdminDashboard = () => {
   const [expandedId, setExpandedId] = useState(null);
   const navigate = useNavigate();
 
-  const getAuthHeaders = () => ({
+  const getAuthHeaders = useCallback(() => ({
     headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
-  });
+  }), []);
 
-  useEffect(() => {
-    validateAndFetch();
-  }, []);
-
-  const validateAndFetch = async () => {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      navigate('/admin-login');
-      return;
-    }
-
-    try {
-      await axios.get(`${BACKEND_URL}/api/admin/validate`, getAuthHeaders());
-      fetchData();
-    } catch (err) {
-      localStorage.removeItem('adminToken');
-      navigate('/admin-login');
-    }
-  };
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [contactsRes, statsRes] = await Promise.all([
@@ -55,7 +35,27 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getAuthHeaders]);
+
+  const validateAndFetch = useCallback(async () => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      navigate('/admin-login');
+      return;
+    }
+
+    try {
+      await axios.get(`${BACKEND_URL}/api/admin/validate`, getAuthHeaders());
+      fetchData();
+    } catch (err) {
+      localStorage.removeItem('adminToken');
+      navigate('/admin-login');
+    }
+  }, [navigate, getAuthHeaders, fetchData]);
+
+  useEffect(() => {
+    validateAndFetch();
+  }, [validateAndFetch]);
 
   const markAsRead = async (id) => {
     try {
