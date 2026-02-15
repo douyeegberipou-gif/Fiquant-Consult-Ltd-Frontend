@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Clock, User, Calendar, Share2, BookOpen } from 'lucide-react';
 import axios from 'axios';
@@ -11,11 +11,7 @@ const ArticlePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchArticle();
-  }, [id]);
-
-  const fetchArticle = async () => {
+  const fetchArticle = useCallback(async () => {
     try {
       const response = await axios.get(`${BACKEND_URL}/api/articles/${id}`);
       setArticle(response.data);
@@ -24,7 +20,11 @@ const ArticlePage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchArticle();
+  }, [fetchArticle]);
 
   const handleShare = () => {
     if (navigator.share) {
