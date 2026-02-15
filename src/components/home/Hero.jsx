@@ -1,9 +1,56 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import { companyInfo } from '../../data/mockData';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Hero = () => {
+  const [articles, setArticles] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  useEffect(() => {
+    fetchArticles();
+  }, []);
+
+  const fetchArticles = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/articles`);
+      setArticles(response.data.slice(0, 5)); // Max 5 articles in carousel
+    } catch (err) {
+      console.error('Failed to fetch articles:', err);
+    }
+  };
+
+  const nextSlide = useCallback(() => {
+    if (articles.length <= 1) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % articles.length);
+      setIsTransitioning(false);
+    }, 300);
+  }, [articles.length]);
+
+  const prevSlide = () => {
+    if (articles.length <= 1) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev - 1 + articles.length) % articles.length);
+      setIsTransitioning(false);
+    }, 300);
+  };
+
+  // Auto-advance carousel
+  useEffect(() => {
+    if (articles.length <= 1) return;
+    const interval = setInterval(nextSlide, 5000);
+    return () => clearInterval(interval);
+  }, [articles.length, nextSlide]);
+
+  const currentArticle = articles[currentIndex];
+
   return (
     <section className="relative min-h-screen bg-black overflow-hidden">
       {/* Background Pattern */}
@@ -56,23 +103,103 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* Right Column - Featured Content */}
+          {/* Right Column - Article Carousel */}
           <div className="relative">
             <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl overflow-hidden border border-gray-700/50 shadow-2xl">
-              {/* Featured Case Study Card */}
-              <div className="relative">
-                <div className="aspect-video bg-gradient-to-br from-gold-900/30 to-gray-900 flex items-center justify-center">
-                  <div className="text-center p-8">
-                    <span className="text-gold-400 text-sm font-medium uppercase tracking-wider">Case Study</span>
-                    <h3 className="text-2xl font-bold text-white mt-4 mb-2">Leading Nigerian Bank</h3>
-                    <p className="text-gray-400">Achieving 40% reduction in compliance costs through strategic optimization</p>
-                    <button className="mt-6 inline-flex items-center text-gold-400 hover:text-gold-300 transition-colors group">
-                      <span className="mr-2">Read the case study</span>
-                      <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-                    </button>
+              {articles.length > 0 && currentArticle ? (
+                <div className="relative">
+                  <div 
+                    className={`aspect-video bg-gradient-to-br from-gold-900/30 to-gray-900 flex items-center justify-center transition-opacity duration-300 ${
+                      isTransitioning ? 'opacity-0' : 'opacity-100'
+                    }`}
+                  >
+                    {currentArticle.image ? (
+                      <div className="relative w-full h-full">
+                        <img 
+                          src={currentArticle.image} 
+                          alt={currentArticle.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+                      </div>
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <BookOpen className="w-16 h-16 text-gold-400/30" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 p-8 text-center">
+                      <span className="text-gold-400 text-sm font-medium uppercase tracking-wider">
+                        {currentArticle.category}
+                      </span>
+                      <h3 className="text-xl font-bold text-white mt-3 mb-2 line-clamp-2">
+                        {currentArticle.title}
+                      </h3>
+                      <p className="text-gray-400 text-sm line-clamp-2 mb-4">
+                        {currentArticle.excerpt}
+                      </p>
+                      <Link 
+                        to={`/library/${currentArticle.id}`}
+                        className="inline-flex items-center text-gold-400 hover:text-gold-300 transition-colors group"
+                      >
+                        <span className="mr-2">Read article</span>
+                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Carousel Controls */}
+                  {articles.length > 1 && (
+                    <>
+                      <button
+                        onClick={prevSlide}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/80 rounded-full text-white transition-colors"
+                        aria-label="Previous article"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={nextSlide}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/80 rounded-full text-white transition-colors"
+                        aria-label="Next article"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+
+                      {/* Dots Indicator */}
+                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex space-x-2">
+                        {articles.map((_, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setCurrentIndex(idx)}
+                            className={`w-2 h-2 rounded-full transition-colors ${
+                              idx === currentIndex ? 'bg-gold-400' : 'bg-gray-600'
+                            }`}
+                            aria-label={`Go to article ${idx + 1}`}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                /* Fallback: Default Case Study when no articles */
+                <div className="relative">
+                  <div className="aspect-video bg-gradient-to-br from-gold-900/30 to-gray-900 flex items-center justify-center">
+                    <div className="text-center p-8">
+                      <span className="text-gold-400 text-sm font-medium uppercase tracking-wider">Case Study</span>
+                      <h3 className="text-2xl font-bold text-white mt-4 mb-2">Leading Nigerian Bank</h3>
+                      <p className="text-gray-400">Achieving 40% reduction in compliance costs through strategic optimization</p>
+                      <Link 
+                        to="/library"
+                        className="mt-6 inline-flex items-center text-gold-400 hover:text-gold-300 transition-colors group"
+                      >
+                        <span className="mr-2">Explore our library</span>
+                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Floating Stats Card */}

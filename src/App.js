@@ -8,6 +8,8 @@ import ServicesPage from "./pages/ServicesPage";
 import ProductsPage from "./pages/ProductsPage";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
+import LibraryPage from "./pages/LibraryPage";
+import ArticlePage from "./pages/ArticlePage";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 
@@ -29,6 +31,8 @@ function App() {
           <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
           <Route path="/services" element={<PublicLayout><ServicesPage /></PublicLayout>} />
           <Route path="/products" element={<PublicLayout><ProductsPage /></PublicLayout>} />
+          <Route path="/library" element={<PublicLayout><LibraryPage /></PublicLayout>} />
+          <Route path="/library/:id" element={<PublicLayout><ArticlePage /></PublicLayout>} />
           <Route path="/about" element={<PublicLayout><AboutPage /></PublicLayout>} />
           <Route path="/contact" element={<PublicLayout><ContactPage /></PublicLayout>} />
           
