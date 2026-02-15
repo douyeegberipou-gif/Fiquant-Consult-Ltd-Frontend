@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { MapPin, Phone, Mail, Clock, Send, CheckCircle } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import { companyInfo } from '../data/mockData';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -13,28 +16,39 @@ const ContactPage = () => {
     message: ''
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    setIsSubmitted(true);
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        company: '',
-        service: '',
-        message: ''
-      });
-    }, 3000);
+    setError('');
+    setIsLoading(true);
+
+    try {
+      await axios.post(`${BACKEND_URL}/api/contact`, formData);
+      setIsSubmitted(true);
+      setTimeout(() => {
+        setIsSubmitted(false);
+        setFormData({
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+          company: '',
+          service: '',
+          message: ''
+        });
+      }, 3000);
+    } catch (err) {
+      setError('Failed to send message. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -127,7 +141,7 @@ const ContactPage = () => {
                 <h2 className="text-2xl font-bold text-white mb-6">Send us a Message</h2>
                 
                 {isSubmitted ? (
-                  <div className="text-center py-12">
+                  <div className="text-center py-12" data-testid="contact-success-message">
                     <div className="w-16 h-16 bg-gold-400/10 rounded-full flex items-center justify-center mx-auto mb-4">
                       <CheckCircle className="w-8 h-8 text-gold-400" />
                     </div>
@@ -135,7 +149,13 @@ const ContactPage = () => {
                     <p className="text-gray-400">Your message has been sent. We'll get back to you shortly.</p>
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit} className="space-y-6">
+                  <form onSubmit={handleSubmit} className="space-y-6" data-testid="contact-form">
+                    {error && (
+                      <div className="flex items-center space-x-2 text-red-400 bg-red-400/10 border border-red-400/30 rounded-lg p-3" data-testid="contact-error-message">
+                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                        <span className="text-sm">{error}</span>
+                      </div>
+                    )}
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-gray-300 text-sm font-medium mb-2">
@@ -248,9 +268,11 @@ const ContactPage = () => {
 
                     <button
                       type="submit"
-                      className="w-full md:w-auto px-8 py-4 bg-gold-400 text-black font-semibold rounded-lg hover:bg-gold-300 transition-all duration-300 flex items-center justify-center group"
+                      disabled={isLoading}
+                      data-testid="contact-submit-btn"
+                      className="w-full md:w-auto px-8 py-4 bg-gold-400 text-black font-semibold rounded-lg hover:bg-gold-300 transition-all duration-300 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Send Message
+                      {isLoading ? 'Sending...' : 'Send Message'}
                       <Send className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
                     </button>
                   </form>
