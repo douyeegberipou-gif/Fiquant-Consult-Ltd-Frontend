@@ -69,9 +69,14 @@ const ProductsPage = () => {
                   <div className="flex items-center"><CheckCircle className="w-4 h-4 text-gold-400 mr-3" /><span className="text-gray-300 text-sm">Compliance calendar</span></div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <Link to="/contact" className="inline-flex items-center text-gold-400 font-medium hover:text-gold-300 transition-colors">
+                  <a 
+                    href="https://www.fiquanttaxpro.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center text-gold-400 font-medium hover:text-gold-300 transition-colors"
+                  >
                     Start Free Trial <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
+                  </a>
                   <span className="text-gray-500 text-sm">Enterprise Ready</span>
                 </div>
               </div>
